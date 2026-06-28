@@ -406,11 +406,12 @@ fun CourseCard(course: Course) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Course Thumbnail with Text Overlay
+            // Left: Course Thumbnail with Color Gradient Overlay & Border
             Box(
                 modifier = Modifier
                     .size(width = 100.dp, height = 75.dp)
-                    .clip(RoundedCornerShape(12.dp)),
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.BottomStart
             ) {
                 Image(
@@ -419,11 +420,18 @@ fun CourseCard(course: Course) {
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
-                // Dark scrim overlay for text readability
+                // Premium deep teal-to-black gradient overlay
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.35f))
+                        .background(
+                            Brush.verticalGradient(
+                                colors = listOf(
+                                    Color.Black.copy(alpha = 0.15f),
+                                    Color(0xFF00332C).copy(alpha = 0.8f) // Premium dark teal
+                                )
+                            )
+                        )
                 )
                 // Text overlay
                 Text(
@@ -504,7 +512,7 @@ fun CourseCard(course: Course) {
                     )
                 }
             }
-        }
+        }   
     }
 }
 
