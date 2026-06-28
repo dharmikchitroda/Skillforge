@@ -59,56 +59,13 @@ data class Course(
     val author: String,
     val rating: Double,
     val duration: String,
-    val difficulty: String,
-    val imageRes: Int
-)
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+    val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val categoryScrollState = rememberScrollState() // for horizontal scroll
     val coroutineScope = rememberCoroutineScope()
-
-    // Sample Data
-    val categories = remember {
-        listOf(
-            Category("Android\nDevelopment", 2, Color(0xFFE0F2F1), Color(0xFF00BFA5)),
-            Category("Backend & APIs", 2, Color(0xFFE8F5E9), Color(0xFF2ECC71)),
-            Category("Frontend\nDevelopment", 3, Color(0xFFFFF3E0), Color(0xFFF39C12)),
-            Category("UI/UX Design", 4, Color(0xFFF3E5F5), Color(0xFF9B59B6)),
-            Category("Data Science", 1, Color(0xFFE1F5FE), Color(0xFF3498DB))
-        )
-    }
-
-    val courses = remember {
-        listOf(
-            Course(
-                "Kotlin Fundamentals",
-                "Aarav Sharma",
-                4.7,
-                "6.5h",
-                "BEGINNER",
-                R.drawable.thumbnail
-            ),
-            Course(
-                "Jetpack Compose Essentials",
-                "Meera Nair",
-                4.8,
-                "9h",
-                "INTERMEDIATE",
-                R.drawable.thumbnail
-            ),
-            Course(
-                "Node.js from Scratch",
-                "Sara Khan",
-                4.5,
-                "7.5h",
-                "BEGINNER",
-                R.drawable.thumbnail
-            )
-        )
-    }
 
     Box(
         modifier = Modifier
@@ -117,236 +74,281 @@ fun HomeScreen() {
             .statusBarsPadding() // auto add padding acroding statubar
             .navigationBarsPadding()  // auto add bottom - padding acroding bottombar
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-                .padding(horizontal = 20.dp, vertical = 16.dp)
-        ) {
-            // Header topbar
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 12.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Column {
+        when (val state = uiState) {
+            is HomeUiState.Loading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(color = BrandTeal)
+                }
+            }
+            is HomeUiState.Error -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
                     Text(
-                        text = "Welcome back",
-                        color = Color(0xFF8E8E93),
-                        fontSize = 15.sp,
+                        text = state.message,
+                        color = Color.Red,
+                        fontSize = 16.sp,
                         fontWeight = FontWeight.Medium
                     )
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Text(
-                        text = "Find your next skill",
-                        color = TextBlack,
-                        fontSize = 28.sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-0.5).sp
-                    )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    // Notification Icon
-                    Box(
-                        modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color.White)
-                            .border(1.dp, Color(0xFFEEEEEE), CircleShape)
-                            .clickable {},
-                        contentAlignment = Alignment.Center
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Button(
+                        onClick = { viewModel.loadData("") },
+                        colors = ButtonDefaults.buttonColors(containerColor = BrandTeal)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Notifications,
-                            contentDescription = "Notifications icon",
-                            tint = TextBlack,
-                            modifier = Modifier.size(22.dp)
-                        )
+                        Text("Retry", color = Color.White)
                     }
-                    // Profile Icon
+                }
+            }
+            is HomeUiState.Success -> {
+                val categories = state.data.categories
+                val courses = remember(categories) { categories.flatMap { it.courses } }
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(scrollState)
+                        .padding(horizontal = 20.dp, vertical = 16.dp)
+                ) {
+                    // Header topbar
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column {
+                            Text(
+                                text = "Welcome back",
+                                color = Color(0xFF8E8E93),
+                                fontSize = 15.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Find your next skill",
+                                color = TextBlack,
+                                fontSize = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = (-0.5).sp
+                            )
+                        }
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            // Notification Icon
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color.White)
+                                    .border(1.dp, Color(0xFFEEEEEE), CircleShape)
+                                    .clickable {},
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Notifications,
+                                    contentDescription = "Notifications icon",
+                                    tint = TextBlack,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            // Profile Icon
+                            Box(
+                                modifier = Modifier
+                                    .size(44.dp)
+                                    .clip(CircleShape)
+                                    .background(Color(0xFF009688)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "AS",
+                                    color = Color.White,
+                                    fontSize = 14.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    letterSpacing = (-0.5).sp
+                                )
+                            }
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Search Bar
                     Box(
                         modifier = Modifier
-                            .size(44.dp)
-                            .clip(CircleShape)
-                            .background(Color(0xFF009688)),
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .height(56.dp)
+                            .clip(RoundedCornerShape(24.dp))
+                            .background(Color.White)
+                            .border(1.dp, Color(0xFFE5E5EA), RoundedCornerShape(28.dp))
+                            .clickable { }
+                            .padding(horizontal = 20.dp),
+                        contentAlignment = Alignment.CenterStart
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(
+                                imageVector = Icons.Default.Search,
+                                contentDescription = "Search",
+                                tint = Color(0xFF8E8E93),
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Text(
+                                text = "Search courses, topics...",
+                                color = Color(0xFF8E8E93),
+                                fontSize = 16.sp
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Categories Section Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "D",
-                            color = Color.White,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = (-0.5).sp
+                            text = "Categories",
+                            color = TextBlack,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "See all",
+                            color = BrandTeal,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { }
                         )
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Search Bar
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
-                    .clip(RoundedCornerShape(24.dp))
-                    .background(Color.White)
-                    .border(1.dp, Color(0xFFE5E5EA), RoundedCornerShape(28.dp))
-                    .clickable { }
-                    .padding(horizontal = 20.dp),
-                contentAlignment = Alignment.CenterStart
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search",
-                        tint = Color(0xFF8E8E93),
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Search courses, topics...",
-                        color = Color(0xFF8E8E93),
-                        fontSize = 16.sp
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Categories Section Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Categories",
-                    color = TextBlack,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "See all",
-                    color = BrandTeal,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Categories Horizontal List — overscroll glow disabled
-            @OptIn(ExperimentalFoundationApi::class) //- provide by google this may be changes in future so must be add this lien
-            CompositionLocalProvider(LocalOverscrollConfiguration provides null) { // Parent ek value provide
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(categoryScrollState),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    categories.forEach { category ->
-                        CategoryCard(category = category)
+                    // Categories Horizontal List — overscroll glow disabled
+                    @OptIn(ExperimentalFoundationApi::class)
+                    CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(categoryScrollState),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            categories.forEach { category ->
+                                CategoryCard(category = category)
+                            }
+                        }
                     }
-                }
-            }
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
 
-            // Simple scroll indicator inline
-            val maxScroll = if (categoryScrollState.maxValue > 0) categoryScrollState.maxValue.toFloat() else 1f
-            val scrollFraction = categoryScrollState.value.toFloat() / maxScroll
-            val animatedFraction = animateFloatAsState(
-                targetValue = scrollFraction,
-                label = "scrollFraction"
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 6.dp)
-                    .height(4.dp)
-            ) {
-                // Light grey track
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(4.dp)
-                        .clip(RoundedCornerShape(2.dp))
-                        .background(Color(0xFFE0E0E0))
-                )
-                // Darker thumb
-                val f = animatedFraction.value.coerceIn(0f, 1f)
-                val leadingWeight  = f * 0.6f // eadingWeight = 0 * 0.6 = 0 and trailingWeight = 1 * 0.6 = 0.6
-                val trailingWeight = (1f - f) * 0.6f   // total f*0.6 + (1-f)*0.6 = 0.6
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    if (leadingWeight > 0f)  Spacer(modifier = Modifier.weight(leadingWeight))
+                    // Simple scroll indicator inline
+                    val maxScroll = if (categoryScrollState.maxValue > 0) categoryScrollState.maxValue.toFloat() else 1f
+                    val scrollFraction = categoryScrollState.value.toFloat() / maxScroll
+                    val animatedFraction = animateFloatAsState(
+                        targetValue = scrollFraction,
+                        label = "scrollFraction"
+                    )
                     Box(
                         modifier = Modifier
-                            .weight(0.4f)
+                            .fillMaxWidth()
+                            .padding(vertical = 6.dp)
                             .height(4.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(Color(0xFF9E9E9E))
-                    )
-                    if (trailingWeight > 0f) Spacer(modifier = Modifier.weight(trailingWeight))
+                    ) {
+                        // Light grey track
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .clip(RoundedCornerShape(2.dp))
+                                .background(Color(0xFFE0E0E0))
+                        )
+                        // Darker thumb
+                        val f = animatedFraction.value.coerceIn(0f, 1f)
+                        val leadingWeight  = f * 0.6f
+                        val trailingWeight = (1f - f) * 0.6f
+                        Row(modifier = Modifier.fillMaxWidth()) {
+                            if (leadingWeight > 0f)  Spacer(modifier = Modifier.weight(leadingWeight))
+                            Box(
+                                modifier = Modifier
+                                    .weight(0.4f)
+                                    .height(4.dp)
+                                    .clip(RoundedCornerShape(2.dp))
+                                    .background(Color(0xFF9E9E9E))
+                            )
+                            if (trailingWeight > 0f) Spacer(modifier = Modifier.weight(trailingWeight))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(28.dp))
+
+                    // Popular Courses Section Header
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "Popular courses",
+                            color = TextBlack,
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            text = "See all",
+                            color = BrandTeal,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            modifier = Modifier.clickable { }
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // Popular Courses List
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        courses.forEach { course ->
+                            CourseCard(course = course)
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
             }
-
-            Spacer(modifier = Modifier.height(28.dp))
-
-            // Popular Courses Section Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Popular courses",
-                    color = TextBlack,
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Bold
-                )
-                Text(
-                    text = "See all",
-                    color = BrandTeal,
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.clickable { }
-                )
-            }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Popular Courses List
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                courses.forEach { course ->
-                    CourseCard(course = course)
-                }
-            }
-            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 // custom CategoryCard
 @Composable
-fun CategoryCard(category: Category) {
+fun CategoryCard(category: com.example.assignmentskillforge.data.Category) {
+    val parsedColor = remember(category.iconColor) {
+        try {
+            Color(android.graphics.Color.parseColor(category.iconColor))
+        } catch (e: Exception) {
+            BrandTeal
+        }
+    }
     Box(
         modifier = Modifier
             .width(140.dp)
-            .height(170.dp)
-            .clip(RoundedCornerShape(20.dp))
+            .height(130.dp)
+            .clip(RoundedCornerShape(16.dp))
             .background(Color.White)
-            .border(1.dp, Color(0xFFF0F0F0), RoundedCornerShape(20.dp))
+            .border(1.dp, Color(0xFFF0F0F0), RoundedCornerShape(16.dp))
             .clickable { }
-            .padding(16.dp)
+            .padding(14.dp)
     ) {
         Column(
             modifier = Modifier.fillMaxSize(),
@@ -355,31 +357,31 @@ fun CategoryCard(category: Category) {
             // Icon box
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .clip(RoundedCornerShape(14.dp))
-                    .background(category.bgColor),
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(parsedColor.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
-                // White rounded square inside (matches reference)
+                // Colored rounded square inside
                 Box(
                     modifier = Modifier
-                        .size(22.dp)
-                        .clip(RoundedCornerShape(7.dp))
-                        .background(Color.White)
+                        .size(18.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(parsedColor)
                 )
             }
             // Texts
             Column {
                 Text(
-                    text = category.title,
+                    text = category.name,
                     color = TextBlack,
-                    fontSize = 15.sp,
+                    fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    lineHeight = 18.sp,
+                    lineHeight = 17.sp,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(3.dp))
                 Text(
                     text = "${category.courseCount} courses",
                     color = Color(0xFF8E8E93),
@@ -392,7 +394,7 @@ fun CategoryCard(category: Category) {
 }
 
 @Composable
-fun CourseCard(course: Course) {
+fun CourseCard(course: com.example.assignmentskillforge.data.Course) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -414,9 +416,12 @@ fun CourseCard(course: Course) {
                     .border(1.dp, Color(0xFFE0E0E0), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.BottomStart
             ) {
-                Image(
-                    painter = painterResource(id = course.imageRes),
+                // Coil AsyncImage to load network URLs, falling back to local resource placeholder
+                AsyncImage(
+                    model = course.thumbnailUrl,
                     contentDescription = course.title,
+                    placeholder = painterResource(id = R.drawable.thumbnail),
+                    error = painterResource(id = R.drawable.thumbnail),
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -453,9 +458,10 @@ fun CourseCard(course: Course) {
                 modifier = Modifier.weight(1f)
             ) {
                 // Difficulty Badge
-                val badgeColor = if (course.difficulty == "BEGINNER") Color(0xFF00BFA5) else  Color(0xFFE67E22)
+                val isBeginner = course.level.equals("Beginner", ignoreCase = true)
+                val badgeColor = if (isBeginner) Color(0xFF00BFA5) else Color(0xFFE67E22)
                 Text(
-                    text = course.difficulty,
+                    text = course.level.uppercase(),
                     color = badgeColor,
                     fontSize = 10.sp,
                     fontWeight = FontWeight.Bold,
@@ -478,7 +484,7 @@ fun CourseCard(course: Course) {
                 
                 // Instructor Name
                 Text(
-                    text = course.author,
+                    text = course.instructor.name,
                     color = Color(0xFF8E8E93),
                     fontSize = 13.sp
                 )
@@ -506,7 +512,7 @@ fun CourseCard(course: Course) {
                     ClockIcon(color = Color(0xFF8E8E93), modifier = Modifier.size(13.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
-                        text = course.duration,
+                        text = "${course.durationHours}h",
                         color = Color(0xFF8E8E93),
                         fontSize = 12.sp
                     )
@@ -556,71 +562,5 @@ fun CustomScrollIndicator(
             )
             if (trailingWeight > 0f) Spacer(modifier = Modifier.weight(trailingWeight))
         }
-    }
-}
-
-@Composable
-fun CustomBellIcon(modifier: Modifier = Modifier, color: Color = Color.Black) {
-    Canvas(modifier = modifier.size(22.dp)) {
-        val w = size.width
-        val h = size.height
-        
-        // Bell dome
-        val path = Path().apply {
-            moveTo(w * 0.5f, h * 0.18f)
-            // Left curve
-            cubicTo(w * 0.28f, h * 0.22f, w * 0.22f, h * 0.45f, w * 0.22f, h * 0.68f)
-            lineTo(w * 0.12f, h * 0.76f)
-            lineTo(w * 0.88f, h * 0.76f)
-            lineTo(w * 0.78f, h * 0.68f)
-            // Right curve
-            cubicTo(w * 0.78f, h * 0.45f, w * 0.72f, h * 0.22f, w * 0.5f, h * 0.18f)
-        }
-        drawPath(path = path, color = color)
-        
-        // Bell clapper (bottom circle arc)
-        drawArc(
-            color = color,
-            startAngle = 0f,
-            sweepAngle = 180f,
-            useCenter = true,
-            topLeft = Offset(w * 0.41f, h * 0.76f),
-            size = Size(w * 0.18f, h * 0.14f)
-        )
-        
-        // Bell top ring
-        drawCircle(
-            color = color,
-            radius = w * 0.07f,
-            center = Offset(w * 0.5f, h * 0.12f),
-            style = Stroke(width = 1.8.dp.toPx())
-        )
-    }
-}
-
-@Composable
-fun ClockIcon(color: Color, modifier: Modifier = Modifier) {
-    Canvas(modifier = modifier) {
-        val center = Offset(size.width / 2, size.height / 2)
-        val radius = size.width / 2 - 1.dp.toPx()
-        drawCircle(
-            color = color,
-            radius = radius,
-            style = Stroke(width = 1.5.dp.toPx())
-        )
-        // Hour hand
-        drawLine(
-            color = color,
-            start = center,
-            end = Offset(center.x, center.y - radius * 0.5f),
-            strokeWidth = 1.5.dp.toPx()
-        )
-        // Minute hand
-        drawLine(
-            color = color,
-            start = center,
-            end = Offset(center.x + radius * 0.4f, center.y),
-            strokeWidth = 1.5.dp.toPx()
-        )
     }
 }
