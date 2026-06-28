@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,6 +33,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,8 +60,7 @@ data class Course(
     val rating: Double,
     val duration: String,
     val difficulty: String,
-    val gradientStart: Color,
-    val gradientEnd: Color
+    val imageRes: Int
 )
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -87,8 +89,7 @@ fun HomeScreen() {
                 4.7,
                 "6.5h",
                 "BEGINNER",
-                Color(0xFF009688),
-                Color(0xFF00796B)
+                R.drawable.thumbnail
             ),
             Course(
                 "Jetpack Compose Essentials",
@@ -96,8 +97,7 @@ fun HomeScreen() {
                 4.8,
                 "9h",
                 "INTERMEDIATE",
-                Color(0xFF512DA8),
-                Color(0xFF303F9F)
+                R.drawable.thumbnail
             ),
             Course(
                 "Node.js from Scratch",
@@ -105,8 +105,7 @@ fun HomeScreen() {
                 4.5,
                 "7.5h",
                 "BEGINNER",
-                Color(0xFF009688),
-                Color(0xFF00796B)
+                R.drawable.thumbnail
             )
         )
     }
@@ -407,42 +406,15 @@ fun CourseCard(course: Course) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Course Thumbnail
-            Box(
+            // Left: Course Thumbnail (using local drawable resource)
+            Image(
+                painter = painterResource(id = course.imageRes),
+                contentDescription = course.title,
                 modifier = Modifier
                     .size(width = 100.dp, height = 75.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(
-                        Brush.linearGradient(
-                            colors = listOf(course.gradientStart, course.gradientEnd)
-                        )
-                    )
-                    .drawBehind {
-                        // Decorative circular waves
-                        drawCircle(
-                            color = Color.White.copy(alpha = 0.15f),
-                            radius = size.minDimension * 0.7f,
-                            center = Offset(size.width * 0.8f, size.height * 0.2f)
-                        )
-                        drawCircle(
-                            color = Color.White.copy(alpha = 0.1f),
-                            radius = size.minDimension * 0.5f,
-                            center = Offset(size.width * 0.3f, size.height * 0.9f)
-                        )
-                    }
-                    .padding(8.dp),
-                contentAlignment = Alignment.BottomStart
-            ) {
-                Text(
-                    text = course.title,
-                    color = Color.White,
-                    fontSize = 11.sp,
-                    fontWeight = FontWeight.Bold,
-                    lineHeight = 13.sp,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis
-                )
-            }
+                    .clip(RoundedCornerShape(12.dp)),
+                contentScale = ContentScale.Crop
+            )
 
             Spacer(modifier = Modifier.width(16.dp))
 
