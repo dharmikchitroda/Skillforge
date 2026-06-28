@@ -41,24 +41,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.assignmentskillforge.ui.HomeViewModel
+import com.example.assignmentskillforge.ui.HomeUiState
+import coil.compose.AsyncImage
 
 
 val TextBlack = Color(0xFF111111)
 val BrandTeal = Color(0xFF009688)
 
-// Data Models
-data class Category(
-    val title: String,
-    val courseCount: Int,
-    val bgColor: Color,
-    val iconColor: Color
-)
 
-data class Course(
-    val title: String,
-    val author: String,
-    val rating: Double,
-    val duration: String,
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
@@ -509,7 +503,12 @@ fun CourseCard(course: com.example.assignmentskillforge.data.Course) {
                         fontWeight = FontWeight.SemiBold
                     )
                     Spacer(modifier = Modifier.width(12.dp))
-                    ClockIcon(color = Color(0xFF8E8E93), modifier = Modifier.size(13.dp))
+                    Icon(
+                        painter = painterResource(id = R.drawable.clock_icon),
+                        contentDescription = "Duration",
+                        tint = Color(0xFF8E8E93),
+                        modifier = Modifier.size(13.dp)
+                    )
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${course.durationHours}h",
