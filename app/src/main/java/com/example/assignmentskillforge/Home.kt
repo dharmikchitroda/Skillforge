@@ -406,15 +406,37 @@ fun CourseCard(course: Course) {
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Left: Course Thumbnail (using local drawable resource)
-            Image(
-                painter = painterResource(id = course.imageRes),
-                contentDescription = course.title,
+            // Left: Course Thumbnail with Text Overlay
+            Box(
                 modifier = Modifier
                     .size(width = 100.dp, height = 75.dp)
                     .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
+                contentAlignment = Alignment.BottomStart
+            ) {
+                Image(
+                    painter = painterResource(id = course.imageRes),
+                    contentDescription = course.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                // Dark scrim overlay for text readability
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.35f))
+                )
+                // Text overlay
+                Text(
+                    text = course.title,
+                    color = Color.White,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.Bold,
+                    lineHeight = 13.sp,
+                    maxLines = 3,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
 
             Spacer(modifier = Modifier.width(16.dp))
 
