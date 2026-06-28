@@ -44,7 +44,7 @@ import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.example.assignmentskillforge.ui.HomeViewModel
+import com.example.assignmentskillforge.ui.CourseViewModel
 import com.example.assignmentskillforge.ui.HomeUiState
 import coil.compose.AsyncImage
 
@@ -55,7 +55,7 @@ val BrandTeal = Color(0xFF009688)
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: HomeViewModel = viewModel()) {
+fun HomeScreen(viewModel: CourseViewModel = viewModel()) {
     val uiState by viewModel.uiState.collectAsState()
     val scrollState = rememberScrollState()
     val categoryScrollState = rememberScrollState() // for horizontal scroll
